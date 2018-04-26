@@ -99,9 +99,9 @@ for index, track in enumerate(track_names):
         text = re.sub(r"\[.*\]\n", "", unidecode(text))
 
         if lyrics == '':
-            lyrics = lyrics + text.replace('\n', '|-|')
+            lyrics = lyrics + text.replace('\n', ' ')
         else:
-            lyrics = lyrics + '|-|' + text.replace('\n', '|-|')
+            lyrics = lyrics + ' ' + text.replace('\n', ' ')
 
     metro_songs.at[index, 'lyrics'] = lyrics
 
@@ -132,9 +132,9 @@ for index, track in enumerate(dictionary["song_name"]):
         text = re.sub(r"\[.*\]\n", "", unidecode(text))
 
         if lyrics == '':
-            lyrics = lyrics + text.replace('\n', '|-|')
+            lyrics = lyrics + text.replace('\n', ' ')
         else:
-            lyrics = lyrics + '|-|' + text.replace('\n', '|-|')
+            lyrics = lyrics + ' ' + text.replace('\n', ' ')
         
     genius_songs.at[index, 'lyrics'] = lyrics
 

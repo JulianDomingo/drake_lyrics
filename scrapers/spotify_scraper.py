@@ -3,7 +3,6 @@ import json
 import os
 import pandas as pd
 import re
-import requests
 import spotipy
 import spotipy.util as util
 from unidecode import unidecode
@@ -72,23 +71,29 @@ for album in album_results:
 
 print ("Total songs found: {}".format(len(track_names)))
 
+
 # Fetch the lyrics for each track name.
-unknown_songs = set()
-quote_page = 'http://metrolyrics.com/{}-lyrics-drake.html'
-filename = 'drake-songs.csv'
+quote_page_metro = 'http://metrolyrics.com/{}-lyrics-drake.html'
+filename = '../data/drake-songs-spotify.csv'
 dictionary = {"song_name": list(track_names)}
 songs = pd.DataFrame(data=dictionary)
 
-for index, track in enumerate(track_names):
-    page = urllib.request.urlopen(quote_page.format(track))
-    r = requests.get(quote_page.format(track))
+# The songs listed below are either unavailable on metrolyrics or
+# have a differing naming convention on metrolyrics, resulting in
+# a failure to scrape the lyrics. We address them manually by either
+# providing the correct naming convention or scraping on genius.com.
+track_names.difference({"karaoke", "star67", "cameras-good-ones-go-interlude-medley", "buried-alive-interlude"})
 
-    if len(r.history) > 1:
-        # Song doesn't exist on metrolyrics. Keep track of these songs.
-        unknown_songs.add(track)
+# Handle problematic songs which still exist in metrolyrics.
+track_names.update({"cameras-good-ones-go-interlude", "marvins-room-buried-alive-interlude"})
+
+
+for index, track in enumerate(track_names):
+    page = urllib.request.urlopen(quote_page_metro.format(track))
 
     soup = BeautifulSoup(page, 'html.parser')
     verses = soup.find_all('p', attrs={'class': 'verse'})
+
     lyrics = ''
 
     for verse in verses:
@@ -105,7 +110,34 @@ for index, track in enumerate(track_names):
     print("Saving the lyrics for '{}'...".format(track))
 
 
+# Scrape songs from genius.com which don't exist in metrolyrics.
+quote_page_genius = 'http://genius.com/Drake-{}-lyrics'
+
+for index, track in enumerate(["star67", "karaoke"]):
+    req = urllib.request.Request(url=quote_page_genius.format(track), headers={"User-Agent": "Lyric Scraper"})
+    page = urllib.request.urlopen(req)
+
+    soup = BeautifulSoup(page, "html.parser") 
+    verses = soup.find('div', class_='lyrics').text.strip()
+
+    verses = verses.splitlines()
+
+
+    lyrics = ''
+
+    for verse in verses:
+        text = verse.strip()
+        text = re.sub(r"\[.*\]\n", "", unidecode(text))
+
+        print(text)
+
+        if lyrics == '':
+            lyrics = lyrics + text.replace('\n', '|-|')
+        else:
+            lyrics = lyrics + '|-|' + text.replace('\n', '|-|')
+        
+    songs.at[index, 'lyrics'] = lyrics
+
+
 print("Writing results to {}...".format(filename))
 songs.to_csv(filename, sep=',', encoding='utf-8')
-
-print ("Songs not in metrolyrics DB: ".format(unknown_songs))

@@ -76,7 +76,7 @@ print ("Total songs found: {}".format(len(track_names)))
 quote_page_metro = 'http://metrolyrics.com/{}-lyrics-drake.html'
 filename = '../data/drake-songs-spotify.csv'
 dictionary = {"song_name": list(track_names)}
-songs = pd.DataFrame(data=dictionary)
+metro_songs = pd.DataFrame(data=dictionary)
 
 # The songs listed below are either unavailable on metrolyrics or
 # have a differing naming convention on metrolyrics, resulting in
@@ -105,23 +105,24 @@ for index, track in enumerate(track_names):
         else:
             lyrics = lyrics + '|-|' + text.replace('\n', '|-|')
 
-    songs.at[index, 'lyrics'] = lyrics
+    metro_songs.at[index, 'lyrics'] = lyrics
 
     print("Saving the lyrics for '{}'...".format(track))
 
 
 # Scrape songs from genius.com which don't exist in metrolyrics.
 quote_page_genius = 'http://genius.com/Drake-{}-lyrics'
+dictionary = {"song_name": ["star67", "karaoke"]}
+genius_songs = pd.DataFrame(data=dictionary)
 
-for index, track in enumerate(["star67", "karaoke"]):
+for index, track in enumerate(dictionary["song_name"]):
     req = urllib.request.Request(url=quote_page_genius.format(track), headers={"User-Agent": "Lyric Scraper"})
     page = urllib.request.urlopen(req)
 
     soup = BeautifulSoup(page, "html.parser") 
     verses = soup.find('div', class_='lyrics').text.strip()
-
     verses = verses.splitlines()
-
+    print(type(verses))
 
     lyrics = ''
 
@@ -129,15 +130,14 @@ for index, track in enumerate(["star67", "karaoke"]):
         text = verse.strip()
         text = re.sub(r"\[.*\]\n", "", unidecode(text))
 
-        print(text)
-
         if lyrics == '':
             lyrics = lyrics + text.replace('\n', '|-|')
         else:
             lyrics = lyrics + '|-|' + text.replace('\n', '|-|')
         
-    songs.at[index, 'lyrics'] = lyrics
+    genius_songs.at[index, 'lyrics'] = lyrics
 
 
+all_songs = pd.concat([metro_songs, genius_songs], ignore_index=True)
 print("Writing results to {}...".format(filename))
-songs.to_csv(filename, sep=',', encoding='utf-8')
+all_songs.to_csv(filename, sep=',', encoding='utf-8')

@@ -75,18 +75,16 @@ print ("Total songs found: {}".format(len(track_names)))
 # Fetch the lyrics for each track name.
 quote_page_metro = 'http://metrolyrics.com/{}-lyrics-drake.html'
 filename = '../data/drake-songs-spotify.csv'
-dictionary = {"song_name": list(track_names)}
-metro_songs = pd.DataFrame(data=dictionary)
-
 # The songs listed below are either unavailable on metrolyrics or
 # have a differing naming convention on metrolyrics, resulting in
 # a failure to scrape the lyrics. We address them manually by either
 # providing the correct naming convention or scraping on genius.com.
-track_names.difference({"karaoke", "star67", "cameras-good-ones-go-interlude-medley", "buried-alive-interlude"})
 
 # Handle problematic songs which still exist in metrolyrics.
+track_names.difference_update({"karaoke", "star67", "cameras-good-ones-go-interlude-medley", "buried-alive-interlude"})
 track_names.update({"cameras-good-ones-go-interlude", "marvins-room-buried-alive-interlude"})
-
+dictionary = {"song_name": list(track_names)}
+metro_songs = pd.DataFrame(data=dictionary)
 
 for index, track in enumerate(track_names):
     page = urllib.request.urlopen(quote_page_metro.format(track))
@@ -127,6 +125,9 @@ for index, track in enumerate(dictionary["song_name"]):
     lyrics = ''
 
     for verse in verses:
+        if ("[" in verse) or ("]" in verse):
+            continue
+
         text = verse.strip()
         text = re.sub(r"\[.*\]\n", "", unidecode(text))
 
@@ -138,6 +139,6 @@ for index, track in enumerate(dictionary["song_name"]):
     genius_songs.at[index, 'lyrics'] = lyrics
 
 
-all_songs = pd.concat([metro_songs, genius_songs], ignore_index=True)
+songs = pd.concat([metro_songs, genius_songs], ignore_index=True)
 print("Writing results to {}...".format(filename))
-all_songs.to_csv(filename, sep=',', encoding='utf-8')
+songs.to_csv(filename, sep=',', encoding='utf-8')

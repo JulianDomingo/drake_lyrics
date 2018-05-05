@@ -28,11 +28,15 @@ This confidence score assignment is repeated continuously until the scores conve
 #### Perplexity Scoring
 The metric we use to determine the "correctness" of our model's predictions is through the **perplexity** function, shown below:
 
+<center>
 ![Perplexity](./perplexity.png)
+</center>
 
 where ***p<sub>target<sub>i</sub></sub>*** is the probability of character or word ***i*** occurring as the prediction. The character-level RNN converged to a lower perplexity score in comparison to the word-level RNN, shown below:
 
+<center>
 ![Training Loss - Perplexity](./training_perplexity.png)
+</center>
 
 ### Results
 
